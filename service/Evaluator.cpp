@@ -2,6 +2,7 @@
 // Created by renan on 25/08/18.
 //
 
+#include <limits>
 #include "Evaluator.h"
 
 void Evaluator::evaluate(Auction *auction) {
@@ -22,3 +23,8 @@ double Evaluator::getBigger() const {
 double Evaluator::getSmaller() const {
     return smaller;
 }
+
+Evaluator::Evaluator() {
+    Evaluator::smaller = std::numeric_limits<double>::infinity();
+    Evaluator::bigger = -1 * (std::numeric_limits<double>::infinity());
+};

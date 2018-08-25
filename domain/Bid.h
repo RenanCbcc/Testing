@@ -13,14 +13,14 @@
 class Bid {
 public:
 
-    Bid(User *user, double value);
+    Bid(User *, double);
 
     User *getUser() const;
 
     double getValue() const;
 
 private:
-    User*user;
+    User *user;
     double value;
 
 };

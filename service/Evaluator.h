@@ -10,6 +10,8 @@
 
 class Evaluator {
 public:
+    Evaluator();
+
     void evaluate(Auction *);
 
     double getBigger() const;
