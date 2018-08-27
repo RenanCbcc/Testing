@@ -17,4 +17,16 @@ double Bid::getValue() const {
     return value;
 }
 
+bool Bid::operator<(Bid &bid) {
+    return (Bid::value < bid.getValue());
+}
+
+bool Bid::operator>(Bid &bid) {
+    return (Bid::value > bid.getValue());
+}
+
+bool Bid::operator==(Bid &bid) {
+    return (Bid::value == bid.getValue());
+}
+
 

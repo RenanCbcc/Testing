@@ -12,6 +12,12 @@
 
 class Bid {
 public:
+    bool operator<(Bid &);
+
+    bool operator>(Bid &);
+
+    bool operator==(Bid &);
+
 
     Bid(User *, double);
 
