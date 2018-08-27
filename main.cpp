@@ -62,6 +62,16 @@ TEST_F(EvaluatorTest, shouldReturnTheMean) {
 
 TEST_F(EvaluatorTest, shouldRetunrAuctionWithOnlyOneBid) {
     before->auction->propose(new Bid(before->users[2], 250.0));
+
+    Evaluator auctioner;
+    auctioner.evaluate(before->auction);
+
+    EXPECT_EQ(250.0, auctioner.getBiggest()[0]->getValue());
+
+}
+
+TEST_F(EvaluatorTest, shouldRetunrAuctionThreeBiggestsBid) {
+    before->auction->propose(new Bid(before->users[2], 250.0));
     before->auction->propose(new Bid(before->users[0], 400.0));
     before->auction->propose(new Bid(before->users[3], 320.0));
     before->auction->propose(new Bid(before->users[2], 450.0));
@@ -76,7 +86,44 @@ TEST_F(EvaluatorTest, shouldRetunrAuctionWithOnlyOneBid) {
 
 }
 
+TEST_F(EvaluatorTest, shouldRetunrNoBid) {
 
+    Evaluator auctioner;
+    auctioner.evaluate(before->auction);
+    EXPECT_EQ(true, auctioner.getBiggest().empty());
+
+
+}
+
+TEST_F(EvaluatorTest, shouldSelectBidBetween1000And3000) {
+    before->auction->propose(new Bid(before->users[2], 2000.0));
+    before->auction->propose(new Bid(before->users[0], 1000.0));
+    before->auction->propose(new Bid(before->users[3], 3000.0));
+    before->auction->propose(new Bid(before->users[2], 800.0));
+
+    Evaluator auctioner;
+    auto bids = auctioner.filter(before->auction);
+    EXPECT_EQ(1, bids.size());
+    EXPECT_EQ(2000.0, bids[0]->getValue());
+
+
+}
+
+TEST_F(EvaluatorTest, shouldSelectBidAbove5000) {
+    before->auction->propose(new Bid(before->users[2], 2000.0));
+    before->auction->propose(new Bid(before->users[0], 1000.0));
+    before->auction->propose(new Bid(before->users[3], 3000.0));
+    before->auction->propose(new Bid(before->users[2], 800.0));
+    before->auction->propose(new Bid(before->users[2], 5800.0));
+
+    Evaluator auctioner;
+    auto bids = auctioner.filter(before->auction);
+    EXPECT_EQ(2, bids.size());
+    EXPECT_EQ(2000.0, bids[0]->getValue());
+    EXPECT_EQ(5800.0, bids[1]->getValue());
+
+
+}
 int main(int argc, char *arvg[]) {
     testing::InitGoogleTest(&argc, arvg);
     return RUN_ALL_TESTS();

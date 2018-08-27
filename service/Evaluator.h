@@ -17,6 +17,8 @@ public:
 
     void calculate(Auction *);
 
+    std::vector<Bid *> filter(Auction *);
+
     double getBigger() const;
 
     double getMean() const;
