@@ -981,7 +981,7 @@ bool ParseNaturalNumber(const ::std::string& str, Integer* number) {
 
 # if GTEST_OS_WINDOWS && !defined(__GNUC__)
 
-  // MSVC and C++ Builder define __int64 instead of the standard long long.
+  // MSVC and C++ TestBuilder define __int64 instead of the standard long long.
   typedef unsigned __int64 BiggestConvertible;
   const BiggestConvertible parsed = _strtoui64(str.c_str(), &end, 10);
 

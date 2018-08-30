@@ -3,14 +3,15 @@
 #include "domain/User.h"
 #include "domain/Auction.h"
 #include "service/Evaluator.h"
+#include "builder/TestBuilder.h"
 
 
-struct EvaluatorTest : testing::Test {
-    EvaluatorTest() {
-        auction = new Auction("Playstation 3 Novo");
+struct Environment : testing::Test {
+    // Override this to define how to set up the environment.
+    Environment() {
+        buildAuction = new TestBuilder();
     }
 
-    // Override this to define how to set up the environment.
     void SetUp() override {
         john = new User("John", 01);
         joseph = new User("Joseph", 02);
@@ -20,41 +21,19 @@ struct EvaluatorTest : testing::Test {
     // Override this to define how to tear down the environment.
     virtual void TearDown() {}
 
-    Auction *auction;
-    User *john;
-    User *joseph;
-    User *maria;
+    TestBuilder *buildAuction;
+    User *john{};
+    User *joseph{};
+    User *maria{};
 
 };
 
-struct AuctionTest : testing::Test {
-    AuctionTest() {
-        auction = new Auction("Macbook pro 13");
-    }
 
-    // Override this to define how to set up the environment.
-    void SetUp() override {
-        john = new User("John", 01);
-        joseph = new User("Joseph", 02);
-        maria = new User("Maria", 03);
-    }
+TEST_F(Environment, shouldRetunrBiggerAndSmallerOrder) {
 
-    // Override this to define how to tear down the environment.
-    virtual void TearDown() {}
-
-    Auction *auction;
-    User *john;
-    User *joseph;
-    User *maria;
-
-};
-
-TEST_F(EvaluatorTest, shouldRetunrBiggerAndSmallerOrder) {
-
-    auction->propose(new Bid(maria, 250.0));
-    auction->propose(new Bid(john, 400.0));
-    auction->propose(new Bid(joseph, 300.0));
-    auction->propose(new Bid(maria, 450.0));
+    Auction *auction = buildAuction->to("Playstation 4 pro")->withBid(maria, 250.0)->withBid(john, 400.0)->withBid(
+            joseph, 300.0)->withBid(
+            maria, 450.0)->build();
 
     Evaluator auctioner;
     auctioner.evaluate(auction);
@@ -68,25 +47,30 @@ TEST_F(EvaluatorTest, shouldRetunrBiggerAndSmallerOrder) {
 
 }
 
-TEST_F(EvaluatorTest, shouldReturnTheMean) {
+TEST_F(Environment, shouldReturnTheMean) {
 
-    auction->propose(new Bid(maria, 250.0));
-    auction->propose(new Bid(john, 300.0));
-    auction->propose(new Bid(joseph, 400.0));
+    Auction *auction = buildAuction
+            ->to("Playstation 4 pro")
+            ->withBid(maria, 250.0)
+            ->withBid(john, 300.0)
+            ->withBid(joseph, 400.0)
+            ->withBid(maria, 450.0)
+            ->build();
 
     Evaluator auctioner;
     auctioner.calculate(auction);
-    // comparando a saida com o esperado
-    std::cout << auctioner.getMean() << std::endl;
-
-    double meanEsperada = 316.666666667;
-    EXPECT_NEAR(meanEsperada, auctioner.getMean(), 0.01);
+    // comparing the returned result with the expected result.
+    double expectedMean = 350.0;
+    EXPECT_NEAR(expectedMean, auctioner.getMean(), 0.01);
 
 
 }
 
-TEST_F(EvaluatorTest, shouldRetunrAuctionWithOnlyOneBid) {
-    auction->propose(new Bid(maria, 250.0));
+TEST_F(Environment, shouldRetunrAuctionWithOnlyOneBid) {
+    Auction *auction = buildAuction
+            ->to("Playstation 4 pro")
+            ->withBid(maria, 250.0)
+            ->build();
 
     Evaluator auctioner;
     auctioner.evaluate(auction);
@@ -95,22 +79,29 @@ TEST_F(EvaluatorTest, shouldRetunrAuctionWithOnlyOneBid) {
 
 }
 
-TEST_F(EvaluatorTest, shouldRetunrAuctionThreeBiggestsBids) {
-    auction->propose(new Bid(maria, 250.0));
-    auction->propose(new Bid(joseph, 320.0));
-    auction->propose(new Bid(john, 400.0));
-    auction->propose(new Bid(maria, 450.0));
+TEST_F(Environment, shouldRetunrAuctionThreeBiggestsBids) {
+    Auction *auction = buildAuction
+            ->to("Electric bicycle A7 model")
+            ->withBid(maria, 250.0)
+            ->withBid(john, 400.0)
+            ->withBid(joseph, 300.0)
+            ->withBid(maria, 450.0)
+            ->withDoubleBid(john)
+            ->build();
     Evaluator auctioner;
     auctioner.evaluate(auction);
 
     EXPECT_EQ(3, auctioner.getBiggest().size());
     EXPECT_EQ(400.0, auctioner.getBiggest()[2]->getValue());
-    EXPECT_EQ(320.0, auctioner.getBiggest()[1]->getValue());
-    EXPECT_EQ(450.0, auctioner.getBiggest()[0]->getValue());
+    EXPECT_EQ(450.0, auctioner.getBiggest()[1]->getValue());
+    EXPECT_EQ(800.0, auctioner.getBiggest()[0]->getValue());
 
 }
 
-TEST_F(EvaluatorTest, shouldRetunrNoBid) {
+TEST_F(Environment, shouldRetunrNoBid) {
+    Auction *auction = buildAuction
+            ->to("Broken Playstation 4 pro")
+            ->build();
 
     Evaluator auctioner;
     auctioner.evaluate(auction);
@@ -119,61 +110,70 @@ TEST_F(EvaluatorTest, shouldRetunrNoBid) {
 
 }
 
-TEST_F(EvaluatorTest, shouldSelectBidBetween1000And3000) {
-    auction->propose(new Bid(maria, 2000.0));
-    auction->propose(new Bid(john, 1000.0));
-    auction->propose(new Bid(joseph, 3000.0));
-    auction->propose(new Bid(maria, 800.0));
-
-    Evaluator auctioner;
-    auto bids = auctioner.filter(auction);
-    EXPECT_EQ(1, bids.size());
-    EXPECT_EQ(2000.0, bids[0]->getValue());
-
-
-}
-
-TEST_F(EvaluatorTest, shouldSelectBidAbove5000) {
-    auction->propose(new Bid(maria, 800.0));
-    auction->propose(new Bid(john, 1000.0));
-    auction->propose(new Bid(maria, 2000.0));
-    auction->propose(new Bid(joseph, 3000.0));
-    auction->propose(new Bid(maria, 5800.0));
+TEST_F(Environment, shouldSelectBidBetween1000And3000) {
+    Auction *auction = buildAuction
+            ->to("Macbook pro retina")
+            ->withBid(maria, 1000.0)
+            ->withBid(john, 1200.0)
+            ->withBid(joseph, 2000.0)
+            ->withBid(maria, 3000.0)
+            ->build();
 
     Evaluator auctioner;
     auto bids = auctioner.filter(auction);
     EXPECT_EQ(2, bids.size());
-    EXPECT_EQ(2000.0, bids[0]->getValue());
-    EXPECT_EQ(5800.0, bids[1]->getValue());
+    EXPECT_EQ(1200.0, bids[0]->getValue());
 
 
 }
 
-TEST_F(AuctionTest, shouldNotAcceptTwoConsecutiveBids) {
+TEST_F(Environment, shouldSelectBidAbove5000) {
+    Auction *auction = buildAuction
+            ->to("Macbook pro retina")
+            ->withBid(maria, 800.0)
+            ->withBid(john, 1200.0)
+            ->withBid(joseph, 2000.0)
+            ->withBid(maria, 3000.0)
+            ->withBid(joseph, 5800.0)
+            ->build();
 
-    auction->propose(new Bid(maria, 800.0));
-    auction->propose(new Bid(maria, 1000.0));
+    Evaluator auctioner;
+    auto bids = auctioner.filter(auction);
+    EXPECT_EQ(3, bids.size());
+    EXPECT_EQ(1200.0, bids[0]->getValue());
+    EXPECT_EQ(2000.0, bids[1]->getValue());
+    EXPECT_EQ(5800.0, bids[2]->getValue());
+
+}
+
+TEST_F(Environment, shouldNotAcceptTwoConsecutiveBids) {
+    Auction *auction = buildAuction
+            ->to("Macbook pro retina")
+            ->withBid(maria, 800.0)
+            ->withBid(maria, 1200.0)
+            ->build();
 
     auto bids = auction->getBids();
     EXPECT_EQ(1, bids.size());
     EXPECT_EQ(800.0, bids[0]->getValue());
 }
 
-TEST_F(AuctionTest, shouldNotAcceptMoreThanFiveBidsFromSameUser) {
-    auction->propose(new Bid(john, 800.0));
-    auction->propose(new Bid(joseph, 1000.0));
+TEST_F(Environment, shouldNotAcceptMoreThanFiveBidsFromSameUser) {
 
-    auction->propose(new Bid(john, 2000.0));
-    auction->propose(new Bid(joseph, 2200.0));
+    Auction *auction = buildAuction
+            ->to("Heart of Tarrasque")
+            ->withBid(john, 800.0)
+            ->withBid(joseph, 1200.0)
+            ->withBid(john, 2000.0)
+            ->withBid(joseph, 2200.0)
+            ->withBid(john, 2000.0)
+            ->withBid(joseph, 2200.0)
+            ->withBid(john, 2500.0)
+            ->withBid(joseph, 2900.0)
+            ->withBid(john, 3000.0)
+            ->withBid(joseph, 3600.0)
+            ->build();
 
-    auction->propose(new Bid(john, 2000.0));
-    auction->propose(new Bid(joseph, 2200.0));
-
-    auction->propose(new Bid(john, 2500.0));
-    auction->propose(new Bid(joseph, 2900.0));
-
-    auction->propose(new Bid(john, 3000.0));
-    auction->propose(new Bid(joseph, 3600.0));
 
     //This one must be ignored.
     auction->propose(new Bid(john, 3700.0));
@@ -183,54 +183,46 @@ TEST_F(AuctionTest, shouldNotAcceptMoreThanFiveBidsFromSameUser) {
     EXPECT_EQ(3600.0, bids[bids.size() - 1]->getValue());
 }
 
-TEST_F(AuctionTest, mustDoubleTheBidsFromAnUser) {
-    auction->propose(new Bid(john, 800.0));
-    auction->propose(new Bid(joseph, 1000.0));
-
-    auction->propose(new Bid(john, 2000.0));
-    auction->propose(new Bid(joseph, 2200.0));
-
-    auction->propose(new Bid(john, 2000.0));
-    auction->propose(new Bid(joseph, 2200.0));
-
-    auction->propose(new Bid(john, 2500.0));
-    auction->propose(new Bid(joseph, 3000.0));
-
-    auction->propose(new Bid(john, 3300.0));
-    auction->doubleBid(joseph);
-
-
-    //This one must be ignored.
-    auction->propose(new Bid(john, 10300.0));
+TEST_F(Environment, shouldDoubleTheBidsFromAnUser) {
+    Auction *auction = buildAuction
+            ->to("Heart of Tarrasque")
+            ->withBid(john, 800.0)
+            ->withBid(joseph, 1200.0)
+            ->withBid(john, 2000.0)
+            ->withBid(joseph, 2200.0)
+            ->withBid(john, 2000.0)
+            ->withBid(joseph, 2200.0)
+            ->withBid(john, 2500.0)
+            ->withBid(joseph, 2900.0)
+            ->withBid(john, 3000.0)
+            ->withDoubleBid(joseph)
+            ->withBid(john, 10300.0)//This one must be ignored.
+            ->build();
 
     auto bids = auction->getBids();
     EXPECT_EQ(10, bids.size());
-    EXPECT_EQ(6000.0, bids[bids.size() - 1]->getValue());
+    EXPECT_EQ(5800.0, bids[bids.size() - 1]->getValue());
 }
 
-TEST_F(AuctionTest, mustNotDoubleTheBidIfUserHasNoBid) {
-    auction->propose(new Bid(john, 800.0));
-    auction->propose(new Bid(joseph, 1000.0));
-
-    auction->propose(new Bid(john, 2000.0));
-    auction->propose(new Bid(joseph, 2200.0));
-
-    auction->propose(new Bid(john, 2000.0));
-    auction->propose(new Bid(joseph, 2200.0));
-
-    auction->propose(new Bid(john, 2500.0));
-    auction->propose(new Bid(joseph, 3000.0));
-
-    auction->propose(new Bid(john, 3300.0));
-    auction->doubleBid(maria);
-
-
-    //This one must be ignored.
-    auction->propose(new Bid(john, 10300.0));
+TEST_F(Environment, shouldNotDoubleTheBidIfUserHasNoBid) {
+    Auction *auction = buildAuction
+            ->to("Heart of Tarrasque")
+            ->withBid(john, 800.0)
+            ->withBid(joseph, 1200.0)
+            ->withBid(john, 2000.0)
+            ->withBid(joseph, 2200.0)
+            ->withBid(john, 2000.0)
+            ->withBid(joseph, 2200.0)
+            ->withBid(john, 2500.0)
+            ->withBid(joseph, 2900.0)
+            ->withBid(john, 3000.0)
+            ->withDoubleBid(maria) //This one must be ignored.
+            ->withBid(john, 10300.0)//This one must be ignored.
+            ->build();
 
     auto bids = auction->getBids();
     EXPECT_EQ(9, bids.size());
-    EXPECT_EQ(3300.0, bids[bids.size() - 1]->getValue());
+    EXPECT_EQ(3000.0, bids[bids.size() - 1]->getValue());
 }
 
 

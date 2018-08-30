@@ -19,7 +19,7 @@ void Auction::propose(Bid *bid) {
 void Auction::doubleBid(User *user) {
     for (int i = (bids.size() - 1); i >= 0; i--) {
         if (bids[i]->getUser() == user) {
-            Auction::bids.push_back(new Bid(user, bids[i]->getValue() * 2));
+            propose(new Bid(user, bids[i]->getValue() * 2));
             return;
         }
     }
@@ -27,7 +27,9 @@ void Auction::doubleBid(User *user) {
 
 }
 
-bool Auction::mayBid(const Bid *bid, int total) { return getLastBid()->getUser() != bid->getUser() and total < 5; }
+bool Auction::mayBid(const Bid *bid, int total) {
+    return getLastBid()->getUser() != bid->getUser() and total < 5;
+}
 
 int Auction::quantityOfBids(const Bid *bid) const {
     int total = 0;

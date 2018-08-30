@@ -4,7 +4,6 @@
 
 #include <limits>
 #include <algorithm>
-#include <iostream>
 #include "Evaluator.h"
 
 Evaluator::Evaluator() {
@@ -63,11 +62,12 @@ std::vector<Bid *> Evaluator::filter(Auction *auction) {
     }
 
     for (Bid *bid : auction->getBids()) {
-        if (bid->getValue() > 1000 && bid->getValue() < 3000) {
+        double value = bid->getValue();
+        if (value > 500 && value < 700) {
             bids.push_back(bid);
-        } else if (bid->getValue() > 500 && bid->getValue() < 700) {
+        } else if (value > 1000 && value < 3000) {
             bids.push_back(bid);
-        } else if (bid->getValue() > 5000) {
+        } else if (value > 5000) {
             bids.push_back(bid);
         }
     }
