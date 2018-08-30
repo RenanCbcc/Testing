@@ -12,14 +12,16 @@
 
 class Bid {
 public:
+    void setValue(double value);
+
     bool operator<(Bid &);
 
     bool operator>(Bid &);
 
-    bool operator==(Bid &);
+    //bool operator==(Bid &);
 
 
-    Bid(User *, double);
+    Bid(User *, double value = 0);
 
     User *getUser() const;
 

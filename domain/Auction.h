@@ -13,7 +13,10 @@ class Auction {
 
 public:
     explicit Auction(const std::string &description);
+
     void propose(Bid *);
+
+    void doubleBid(User *);
 
     const std::string &getDescription() const;
 
@@ -23,6 +26,11 @@ private:
     std::string description;
     std::vector<Bid *> bids;
 
+    Bid *getLastBid();
+
+    int quantityOfBids(const Bid *) const;
+
+    bool mayBid(const Bid *, int);
 };
 
 

@@ -10,7 +10,8 @@
 
 class User {
 public:
-    User(std::string, int id = 0);
+    explicit User(std::string, int id = 0);
+    bool operator==(User &);
 
     int getId() const;
 

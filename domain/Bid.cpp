@@ -25,8 +25,12 @@ bool Bid::operator>(Bid &bid) {
     return (Bid::value > bid.getValue());
 }
 
+void Bid::setValue(double value) {
+    Bid::value = value;
+}
+/*
 bool Bid::operator==(Bid &bid) {
     return (Bid::value == bid.getValue());
 }
-
+*/
 

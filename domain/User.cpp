@@ -1,3 +1,5 @@
+#include <utility>
+
 //
 // Created by renan on 25/08/18.
 //
@@ -13,6 +15,10 @@ const std::string &User::getName() const {
 }
 
 User::User(std::string name, int id) {
-    User::name = name;
+    User::name = std::move(name);
     User::id = id;
+}
+
+bool User::operator==(User &other) {
+    return User::id == other.getId();
 }
