@@ -222,9 +222,17 @@ TEST_F(Environment, shouldNotDoubleTheBidIfUserHasNoBid) {
 
     auto bids = auction->getBids();
     EXPECT_EQ(9, bids.size());
-    EXPECT_EQ(3000.0, bids[bids.size() - 1]->getValue());
+    EXPECT_EQ(bids[bids.size() - 1]->getValue(),3000.0);
 }
 
+TEST_F(Environment, shouldNotEvaluateAuctionsWithoutBids) {
+    Auction *auction = buildAuction
+            ->to("Hall 9000 computer")
+            ->build();
+
+    Evaluator auctioner;
+    EXPECT_ANY_THROW(auctioner.evaluate(auction));
+}
 
 int main(int argc, char *arvg[]) {
     testing::InitGoogleTest(&argc, arvg);

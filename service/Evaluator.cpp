@@ -4,6 +4,7 @@
 
 #include <limits>
 #include <algorithm>
+#include <stdexcept>
 #include "Evaluator.h"
 
 Evaluator::Evaluator() {
@@ -26,6 +27,8 @@ void Evaluator::evaluate(Auction *auction) {
             Evaluator::smaller = Evaluator::biggest[biggest.size() - 1]->getValue();
             Evaluator::bigger = Evaluator::biggest[0]->getValue();
         }
+    } else{
+        throw std::runtime_error("Is not possible evaluate an auction without bids.");
     }
 
     //TODO Free the pointer;
