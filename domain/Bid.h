@@ -21,7 +21,7 @@ public:
     //bool operator==(Bid &);
 
 
-    Bid(User *, double value = 0);
+    explicit Bid(User *, double value = 0);
 
     User *getUser() const;
 

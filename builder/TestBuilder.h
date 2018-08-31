@@ -15,7 +15,7 @@ public:
     TestBuilder();
 
     TestBuilder *to(std::string);
-
+    TestBuilder *atDate(boost::gregorian::date);
     TestBuilder *withBid(User *, double);
     TestBuilder *withDoubleBid(User *);
 

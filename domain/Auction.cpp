@@ -5,7 +5,10 @@
 #include "Auction.h"
 
 
-Auction::Auction(const std::string &description) : description(description) {}
+Auction::Auction(const std::string &description) : description(description) {
+    closed = false;
+    date = boost::gregorian::day_clock::local_day();
+}
 
 void Auction::propose(Bid *bid) {
     int total = quantityOfBids(bid);
@@ -14,7 +17,6 @@ void Auction::propose(Bid *bid) {
     }
 
 }
-
 
 void Auction::doubleBid(User *user) {
     for (int i = (bids.size() - 1); i >= 0; i--) {
@@ -49,6 +51,22 @@ const std::string &Auction::getDescription() const {
 
 const std::vector<Bid *> &Auction::getBids() const {
     return bids;
+}
+
+void Auction::close() {
+    closed = true;
+}
+
+bool Auction::isClosed() {
+    return closed;
+}
+
+const boost::gregorian::date &Auction::getDate() const {
+    return date;
+}
+
+void Auction::setDate(const boost::gregorian::date &date) {
+    Auction::date = date;
 }
 
 

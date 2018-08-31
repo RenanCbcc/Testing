@@ -1,10 +1,20 @@
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#include "gmock/gmock.h"
 #include "domain/User.h"
 #include "domain/Auction.h"
 #include "service/Evaluator.h"
+#include "service/Finisher.h"
 #include "builder/TestBuilder.h"
+#include "boost/date_time/gregorian/gregorian.hpp"
+#include "persistence/AuctionDAO.h"
 
+
+class AuctionDAOMock : AuctionDAO {
+public:
+    MOCK_METHOD0(save, std::vector<Auction *>());//It takes no arguments.
+    MOCK_METHOD0(update, std::vector<Auction *>()); //It takes no arguments.
+
+};
 
 struct Environment : testing::Test {
     // Override this to define how to set up the environment.
@@ -222,7 +232,7 @@ TEST_F(Environment, shouldNotDoubleTheBidIfUserHasNoBid) {
 
     auto bids = auction->getBids();
     EXPECT_EQ(9, bids.size());
-    EXPECT_EQ(bids[bids.size() - 1]->getValue(),3000.0);
+    EXPECT_EQ(bids[bids.size() - 1]->getValue(), 3000.0);
 }
 
 TEST_F(Environment, shouldNotEvaluateAuctionsWithoutBids) {
@@ -234,8 +244,32 @@ TEST_F(Environment, shouldNotEvaluateAuctionsWithoutBids) {
     EXPECT_ANY_THROW(auctioner.evaluate(auction));
 }
 
+
+TEST_F(Environment, shouldCloseAuctionsOlderThanOneWeek) {
+
+    Auction *auctionOne = buildAuction
+            ->to("Led Television 50")->atDate(boost::gregorian::date(2017, 8, 24))
+            ->build();
+
+    Auction *auctionTwo = buildAuction
+            ->to("Blue Ray Sony")->atDate(boost::gregorian::date(2017, 8, 24))
+            ->build();
+
+
+    Finisher finisher;
+    finisher.closes();
+
+    std::vector<Auction *> auctions = dao.closed();
+    EXPECT_EQ(0, auctions.size());
+    ASSERT_TRUE(auctions[0]->isClosed());
+    ASSERT_TRUE(auctions[0]->isClosed());
+}
+
 int main(int argc, char *arvg[]) {
     testing::InitGoogleTest(&argc, arvg);
+    testing::InitGoogleMock(&argc, arvg);
     return RUN_ALL_TESTS();
 
+
 }
+

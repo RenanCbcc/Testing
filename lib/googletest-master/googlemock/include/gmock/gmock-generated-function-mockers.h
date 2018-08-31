@@ -46,6 +46,8 @@
 
 #if GTEST_HAS_STD_FUNCTION_
 # include <functional>
+#include <bits/valarray_before.h>
+
 #endif
 
 namespace testing {

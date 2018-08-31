@@ -24,3 +24,8 @@ TestBuilder *TestBuilder::withDoubleBid(User *user) {
     auction->doubleBid(user);
     return this;
 }
+
+TestBuilder *TestBuilder::atDate(boost::gregorian::date date) {
+    auction->setDate(date);
+    return this;
+}

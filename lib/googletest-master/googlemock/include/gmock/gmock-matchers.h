@@ -839,7 +839,7 @@ inline Matcher<T> SafeMatcherCast(const M& polymorphic_matcher) {
 
 // A<T>() returns a matcher that matches any value of type T.
 template <typename T>
-Matcher<T> A();
+    const Matcher A();
 
 // Anything inside the 'internal' namespace IS INTERNAL IMPLEMENTATION
 // and MUST NOT BE USED IN USER CODE!!!
@@ -4288,7 +4288,7 @@ UnorderedElementsAreArray(::std::initializer_list<T> xs) {
 const internal::AnythingMatcher _ = {};
 // Creates a matcher that matches any value of the given type T.
 template <typename T>
-inline Matcher<T> A() {
+inline const Matcher A() {
   return Matcher<T>(new internal::AnyMatcherImpl<T>());
 }
 
