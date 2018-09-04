@@ -19,8 +19,6 @@ public:
 
     virtual void update(Auction *) = 0;
 
-private:
-
 };
 
 

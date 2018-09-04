@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "gmock/gmock.h"
+#include <gmock/gmock.h>
 #include "domain/User.h"
 #include "domain/Auction.h"
 #include "service/Evaluator.h"
@@ -9,8 +9,48 @@
 #include "persistence/AuctionDAO.h"
 
 
-class AuctionDAOMock : AuctionDAO {
+class Turtle {
+
+    ~Turtle() = default;
+
+    virtual void PenUp() = 0;
+
+    virtual void PenDown() = 0;
+
+    virtual void Forward(int distance) = 0;
+
+    virtual void Turn(int degrees) = 0;
+
+    virtual void GoTo(int x, int y) = 0;
+
+    virtual int GetX() const = 0;
+
+    virtual int GetY() const = 0;
+};
+
+class MockTurtle : public Turtle {
 public:
+
+    MOCK_METHOD0(PenUp, void());
+
+    MOCK_METHOD0(PenDown, void());
+
+    MOCK_METHOD1(Forward, void(int distance));
+
+    MOCK_METHOD1(Turn, void(int degrees));
+
+    MOCK_METHOD2(GoTo, void(int x, int y));
+
+    MOCK_CONST_METHOD0(GetX, int());
+
+    MOCK_CONST_METHOD0(GetY, int());
+};
+
+/*
+class AuctionDAOMock : AuctionDAO {
+
+public:
+  // MOCK_CONST_METHOD1(save, void (Auction*));
     MOCK_METHOD0(save, std::vector<Auction *>());//It takes no arguments.
     MOCK_METHOD0(update, std::vector<Auction *>()); //It takes no arguments.
 
@@ -264,12 +304,12 @@ TEST_F(Environment, shouldCloseAuctionsOlderThanOneWeek) {
     ASSERT_TRUE(auctions[0]->isClosed());
     ASSERT_TRUE(auctions[0]->isClosed());
 }
+*/
 
 int main(int argc, char *arvg[]) {
     testing::InitGoogleTest(&argc, arvg);
     testing::InitGoogleMock(&argc, arvg);
     return RUN_ALL_TESTS();
-
 
 }
 
