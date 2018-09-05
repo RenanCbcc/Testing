@@ -848,9 +848,9 @@ class ImplicitlyConvertible {
   // or MSVC refuses to compile the code.
  public:
 #if defined(__BORLANDC__)
-  // C++TestBuilder cannot use member overload resolution during template
+  // C++Builder cannot use member overload resolution during template
   // instantiation.  The simplest workaround is to use its C++0x type traits
-  // functions (C++TestBuilder 2009 and above only).
+  // functions (C++Builder 2009 and above only).
   static const bool value = __is_convertible(From, To);
 #else
   // MSVC warns about implicitly converting from double to int for

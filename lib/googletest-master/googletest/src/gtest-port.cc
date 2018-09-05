@@ -77,7 +77,7 @@ namespace testing {
 namespace internal {
 
 #if defined(_MSC_VER) || defined(__BORLANDC__)
-// MSVC and C++TestBuilder do not provide a definition of STDERR_FILENO.
+// MSVC and C++Builder do not provide a definition of STDERR_FILENO.
 const int kStdOutFileno = 1;
 const int kStdErrFileno = 2;
 #else

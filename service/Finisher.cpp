@@ -10,9 +10,8 @@
 Finisher::Finisher() = default;
 
 void Finisher::closes() {
-    auto *dao = new AuctionDAO();
-    std::vector<Auction *> allCurrentAuctions = dao->currets();
-
+    auto dao = new AuctionDAO();
+    std::vector<Auction *> allCurrentAuctions = dao->currents();
     for (Auction *auction : allCurrentAuctions) {
         if (itStartedLastWeek(auction)) {
             auction->close();

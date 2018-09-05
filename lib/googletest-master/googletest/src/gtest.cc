@@ -4455,7 +4455,7 @@ UnitTest* UnitTest::GetInstance() {
   // This implementation makes the compiler happy, at the cost of
   // leaking the UnitTest object.
 
-  // CodeGear C++TestBuilder insists on a public destructor for the
+  // CodeGear C++Builder insists on a public destructor for the
   // default implementation.  Use this implementation to keep good OO
   // design with private destructor.
 

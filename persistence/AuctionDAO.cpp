@@ -3,8 +3,8 @@
 //
 
 #include "AuctionDAO.h"
-/*
-std::vector<Auction *> AuctionDAO::current() {
+
+std::vector<Auction *> AuctionDAO::currents() {
     return std::vector<Auction *>();
 }
 
@@ -20,4 +20,3 @@ std::vector<Auction *> AuctionDAO::closed() {
     return std::vector<Auction *>();
 }
 
-*/
