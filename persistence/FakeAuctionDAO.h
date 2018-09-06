@@ -12,13 +12,13 @@
 class FakeAuctionDAO {
 public:
 
-    virtual void save(Auction *);
+    void save(Auction *);
 
-    virtual std::vector<Auction *> closed();
+    std::vector<Auction *> closed();
 
-    virtual std::vector<Auction *> current();
+    std::vector<Auction *> current();
 
-    virtual void update(Auction *); /* does nothing! */
+    void update(Auction *); /* does nothing! */
 
 private:
     std::vector<Auction *> Auctions;

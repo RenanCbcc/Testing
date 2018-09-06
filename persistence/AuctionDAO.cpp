@@ -4,7 +4,7 @@
 
 #include "AuctionDAO.h"
 
-std::vector<Auction *> AuctionDAO::currents() {
+std::vector<Auction *> AuctionDAO::current() {
     return std::vector<Auction *>();
 }
 

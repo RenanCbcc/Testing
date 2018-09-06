@@ -3,7 +3,7 @@
 //
 
 #include "FakeAuctionDAO.h"
-/*
+
 void FakeAuctionDAO::save(Auction *auction) {
     FakeAuctionDAO::Auctions.push_back(auction);
 }
@@ -30,4 +30,7 @@ std::vector<Auction *> FakeAuctionDAO::current() {
     return filtereds;
 
 }
-*/
+
+void FakeAuctionDAO::update(Auction *) {
+
+}

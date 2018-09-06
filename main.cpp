@@ -5,14 +5,19 @@
 #include "service/Evaluator.h"
 #include "builder/TestBuilder.h"
 #include "persistence/AuctionDAO.h"
+#include "service/Finisher.h"
 
-
-class AuctionDAOMock : AuctionDAO {
+/*
+ Instead of using AuctionDAO (witch is not ready) in Finish class, I will use a mock for simulate the database.
+ For more examples, I recommend this: https://github.com/CodesBay/Google_Test_Framework/tree/master/Chapter-%203
+ */
+class AuctionDAOMock : public AuctionDAO {
 
 public:
     MOCK_METHOD1(save, void (Auction*));
-    MOCK_METHOD0(save, std::vector<Auction *>());//It takes no arguments.
+    MOCK_METHOD1(update, void (Auction*));//It takes one arguments.
     MOCK_METHOD0(update, std::vector<Auction *>()); //It takes no arguments.
+    MOCK_METHOD0(current, std::vector<Auction *>()); //It takes no arguments.
 
 };
 
@@ -26,12 +31,23 @@ struct Environment : testing::Test {
         john = new User("John", 01);
         joseph = new User("Joseph", 02);
         maria = new User("Maria", 03);
+        auctionOne = buildAuction
+                ->to("Led Television 50")->atDate(boost::gregorian::date(2017, 8, 24))
+                ->build();
+
+        auctionTwo = buildAuction
+                ->to("Blue Ray Sony")->atDate(boost::gregorian::date(2017, 8, 24))
+                ->build();
+
     }
 
     // Override this to define how to tear down the environment.
     virtual void TearDown() {}
 
+    AuctionDAOMock mock;
     TestBuilder *buildAuction;
+    Auction *auctionOne;
+    Auction *auctionTwo;
     User *john{};
     User *joseph{};
     User *maria{};
@@ -216,7 +232,7 @@ TEST_F(Environment, shouldDoubleTheBidsFromAnUser) {
 
 TEST_F(Environment, shouldNotDoubleTheBidIfUserHasNoBid) {
     Auction *auction = buildAuction
-            ->to("Heart of Tarrasque")
+            ->to("Brainiac computer")
             ->withBid(john, 800.0)
             ->withBid(joseph, 1200.0)
             ->withBid(john, 2000.0)
@@ -244,27 +260,26 @@ TEST_F(Environment, shouldNotEvaluateAuctionsWithoutBids) {
     EXPECT_ANY_THROW(auctioner.evaluate(auction));
 }
 
-/*
+
 TEST_F(Environment, shouldCloseAuctionsOlderThanOneWeek) {
 
-    Auction *auctionOne = buildAuction
-            ->to("Led Television 50")->atDate(boost::gregorian::date(2017, 8, 24))
-            ->build();
-
-    Auction *auctionTwo = buildAuction
-            ->to("Blue Ray Sony")->atDate(boost::gregorian::date(2017, 8, 24))
-            ->build();
+    std::vector<Auction *> oldAuctions = {auctionOne, auctionTwo};
 
 
-    Finisher finisher;
+    EXPECT_CALL(mock, current)
+            .Times(1)
+            .WillOnce(testing::Return(oldAuctions));
+
+
+    Finisher finisher(mock);
     finisher.closes();
 
-    std::vector<Auction *> auctions = dao.closed();
-    EXPECT_EQ(0, auctions.size());
-    ASSERT_TRUE(auctions[0]->isClosed());
-    ASSERT_TRUE(auctions[0]->isClosed());
+    EXPECT_EQ(2, oldAuctions.size());
+    ASSERT_TRUE(auctionOne->isClosed());
+    ASSERT_TRUE(auctionTwo->isClosed());
 }
-*/
+
+
 int main(int argc, char *arvg[]) {
     testing::InitGoogleTest(&argc, arvg);
     return RUN_ALL_TESTS();

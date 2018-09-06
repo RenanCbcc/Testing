@@ -7,16 +7,17 @@
 #include "../persistence/AuctionDAO.h"
 #include "../domain/Auction.h"
 
-Finisher::Finisher() = default;
+Finisher::Finisher(AuctionDAO &dao) : dao(dao) {}
+
 
 void Finisher::closes() {
-    auto dao = new AuctionDAO();
-    std::vector<Auction *> allCurrentAuctions = dao->currents();
+    // or yet auto dao = new FakeAuctionDAO(), but with mock this is not necessary anymore;
+    std::vector<Auction *> allCurrentAuctions = dao.current();
     for (Auction *auction : allCurrentAuctions) {
         if (itStartedLastWeek(auction)) {
             auction->close();
             total++;
-            dao->update(auction);
+            dao.update(auction);
         }
     }
 }
@@ -32,5 +33,7 @@ int Finisher::getTotalClosed() {
 int Finisher::differenceDatesInDays(boost::gregorian::date date) {
     return (boost::gregorian::day_clock::local_day() - date).days();
 }
+
+
 
 

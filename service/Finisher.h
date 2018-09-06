@@ -7,11 +7,14 @@
 
 
 #include "../domain/Auction.h"
+#include "../persistence/AuctionDAO.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 
 class Finisher {
 public:
-    Finisher();
+    /*
+     Finisher class may receive a concrete DAO class or a mock derived class */
+    explicit Finisher(AuctionDAO &);
 
     void closes();
 
@@ -23,6 +26,8 @@ private:
     bool itStartedLastWeek(Auction *auction);
 
     int total;
+
+    AuctionDAO &dao;
 };
 
 

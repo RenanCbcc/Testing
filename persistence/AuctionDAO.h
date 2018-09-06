@@ -15,7 +15,7 @@ public:
 
     virtual std::vector<Auction *> closed();
 
-    virtual std::vector<Auction *> currents();
+    virtual std::vector<Auction *> current();
 
     virtual void update(Auction *);
 
