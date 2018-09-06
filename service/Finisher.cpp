@@ -7,17 +7,22 @@
 #include "../persistence/AuctionDAO.h"
 #include "../domain/Auction.h"
 
-Finisher::Finisher(AuctionDAO &dao) : dao(dao) {}
+Finisher::Finisher(AuctionDAO &dao, EmailSender &emailSender) : dao(dao), mailman(emailSender) {}
 
 
 void Finisher::closes() {
-    // or yet auto dao = new FakeAuctionDAO(), but with mock this is not necessary anymore;
     std::vector<Auction *> allCurrentAuctions = dao.current();
     for (Auction *auction : allCurrentAuctions) {
-        if (itStartedLastWeek(auction)) {
-            auction->close();
-            total++;
-            dao.update(auction);
+        try {
+            if (itStartedLastWeek(auction)) {
+                auction->close();
+                total++;
+                dao.update(auction);
+                mailman.send(auction);
+                //dao.update(auction);
+            }
+        } catch (std::exception &e) {
+            //Do anything else.
         }
     }
 }

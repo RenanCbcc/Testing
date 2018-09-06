@@ -8,13 +8,14 @@
 
 #include "../domain/Auction.h"
 #include "../persistence/AuctionDAO.h"
+#include "../domain/EmailSender.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 
 class Finisher {
 public:
     /*
      Finisher class may receive a concrete DAO class or a mock derived class */
-    explicit Finisher(AuctionDAO &);
+    explicit Finisher(AuctionDAO &, EmailSender &);
 
     void closes();
 
@@ -28,6 +29,7 @@ private:
     int total;
 
     AuctionDAO &dao;
+    EmailSender &mailman;
 };
 
 

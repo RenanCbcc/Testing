@@ -8,18 +8,25 @@
 #include "service/Finisher.h"
 
 /*
- Instead of using AuctionDAO (witch is not ready) in Finish class, I will use a mock for simulate the database.
+ Instead of using AuctionDAO (witch is not ready) in Finish class, I will use a mockDAO for simulate the database.
  For more examples, I recommend this: https://github.com/CodesBay/Google_Test_Framework/tree/master/Chapter-%203
  */
-class AuctionDAOMock : public AuctionDAO {
+class MockAuctionDAO : public AuctionDAO {
 
 public:
+
     MOCK_METHOD1(save, void (Auction*));
     MOCK_METHOD1(update, void (Auction*));//It takes one arguments.
-    MOCK_METHOD0(update, std::vector<Auction *>()); //It takes no arguments.
+    MOCK_METHOD0(closed, std::vector<Auction *>()); //It takes no arguments.
     MOCK_METHOD0(current, std::vector<Auction *>()); //It takes no arguments.
 
 };
+
+class  MockEmailSender: public EmailSender{
+public:
+    MOCK_METHOD1(send,void(Auction*));
+};
+
 
 struct Environment : testing::Test {
     // Override this to define how to set up the environment.
@@ -32,11 +39,11 @@ struct Environment : testing::Test {
         joseph = new User("Joseph", 02);
         maria = new User("Maria", 03);
         auctionOne = buildAuction
-                ->to("Led Television 50")->atDate(boost::gregorian::date(2017, 8, 24))
+                ->to("Led Television 50")->atDate(boost::gregorian::date(2018, 8, 24))
                 ->build();
 
         auctionTwo = buildAuction
-                ->to("Blue Ray Sony")->atDate(boost::gregorian::date(2017, 8, 24))
+                ->to("Blue Ray Sony")->atDate(boost::gregorian::date(2018, 8, 24))
                 ->build();
 
     }
@@ -44,7 +51,8 @@ struct Environment : testing::Test {
     // Override this to define how to tear down the environment.
     virtual void TearDown() {}
 
-    AuctionDAOMock mock;
+    MockAuctionDAO mockDAO;
+    MockEmailSender mockESender;
     TestBuilder *buildAuction;
     Auction *auctionOne;
     Auction *auctionTwo;
@@ -265,13 +273,108 @@ TEST_F(Environment, shouldCloseAuctionsOlderThanOneWeek) {
 
     std::vector<Auction *> oldAuctions = {auctionOne, auctionTwo};
 
-
-    EXPECT_CALL(mock, current)
+    EXPECT_CALL(mockDAO, current)
             .Times(1)
             .WillOnce(testing::Return(oldAuctions));
 
 
-    Finisher finisher(mock);
+    Finisher finisher(mockDAO,mockESender);
+    finisher.closes();
+
+    EXPECT_EQ(2, oldAuctions.size());
+    ASSERT_TRUE(auctionOne->isClosed());
+    ASSERT_TRUE(auctionTwo->isClosed());
+}
+
+TEST_F(Environment, shouldNotCloseAuctionsStartedYesterday) {
+    auctionTwo->setDate(boost::gregorian::date(2018, 9, 5));
+    std::vector<Auction *> oldAuctions = {auctionOne, auctionTwo};
+
+
+    EXPECT_CALL(mockDAO, current)
+            .Times(1)
+            .WillOnce(testing::Return(oldAuctions));
+
+
+    Finisher finisher(mockDAO,mockESender);
+    finisher.closes();
+
+    EXPECT_EQ(2, oldAuctions.size());
+    ASSERT_TRUE(auctionOne->isClosed());
+    ASSERT_FALSE(auctionTwo->isClosed());
+}
+
+TEST_F(Environment, shouldNotReturnAnyAuction) {
+    std::vector<Auction *> oldAuctions;
+
+    EXPECT_CALL(mockDAO, current)
+            .Times(1)
+            .WillOnce(testing::Return(oldAuctions));
+
+
+    Finisher finisher(mockDAO,mockESender);
+    finisher.closes();
+
+    EXPECT_EQ(0, oldAuctions.size());
+
+}
+
+TEST_F(Environment, shouldUpdateClosedAuction) {
+    std::vector<Auction *> oldAuctions = {auctionOne};
+
+    EXPECT_CALL(mockDAO, update(testing::_))
+            .Times(testing::Exactly(1)); // If either you comment dao.update(auction) or duplicate it , the test you fail.
+
+    EXPECT_CALL(mockDAO, current)
+            .Times(1)
+            .WillOnce(testing::Return(oldAuctions));
+
+
+    Finisher finisher(mockDAO,mockESender);
+    finisher.closes();
+
+    EXPECT_EQ(1, oldAuctions.size());
+    ASSERT_TRUE(auctionOne->isClosed());
+}
+
+
+TEST_F(Environment, shouldUpdateAndSendAuction) {
+    std::vector<Auction *> oldAuctions = {auctionOne};
+
+    EXPECT_CALL(mockDAO, update(testing::_))
+            .Times(testing::Exactly(1)); // If either you comment dao.update(auction) or duplicate it , the test you fail.
+
+    EXPECT_CALL(mockESender, send(testing::_))// Not really interested in the argument. Anything goes here.
+            .Times(testing::Exactly(1)); // If either you comment dao.update(auction) or duplicate it , the test you fail.
+
+    EXPECT_CALL(mockDAO, current)
+            .Times(1)
+            .WillOnce(testing::Return(oldAuctions));
+
+
+    Finisher finisher(mockDAO,mockESender);
+    finisher.closes();
+
+    EXPECT_EQ(1, oldAuctions.size());
+    ASSERT_TRUE(auctionOne->isClosed());
+}
+
+
+TEST_F(Environment, shouldUpdateAndSendAuctionEvenWithException) {
+    std::vector<Auction *> oldAuctions = {auctionOne,auctionTwo};
+
+    EXPECT_CALL(mockDAO, update(testing::_))
+            .Times(2)
+            .WillOnce(testing::Throw(std::runtime_error("DAO exception has been thrown!"))); // If either you comment dao.update(auction) or duplicate it , the test you fail.
+
+    EXPECT_CALL(mockESender, send(testing::_))// Not really interested in the argument. Anything goes here.
+            .Times(testing::Exactly(1)); // If an exception has been thrown, is not necessary to send an email.
+    EXPECT_CALL(mockDAO, current)
+            .Times(1)
+            .WillOnce(testing::Return(oldAuctions));
+
+
+    Finisher finisher(mockDAO,mockESender);
     finisher.closes();
 
     EXPECT_EQ(2, oldAuctions.size());
@@ -281,6 +384,7 @@ TEST_F(Environment, shouldCloseAuctionsOlderThanOneWeek) {
 
 
 int main(int argc, char *arvg[]) {
+    testing::GTEST_FLAG(throw_on_failure) = true;
     testing::InitGoogleTest(&argc, arvg);
     return RUN_ALL_TESTS();
 

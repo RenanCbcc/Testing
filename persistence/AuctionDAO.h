@@ -13,11 +13,12 @@ class AuctionDAO {
 public:
     virtual void save(Auction *);
 
+    virtual void update(Auction *);
+
     virtual std::vector<Auction *> closed();
 
     virtual std::vector<Auction *> current();
 
-    virtual void update(Auction *);
 
 };
 
