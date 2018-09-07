@@ -5,20 +5,19 @@
 #ifndef TESTING_PAYMENT_H
 #define TESTING_PAYMENT_H
 
-
-#include <ctime>
+#include <boost/date_time/gregorian/greg_date.hpp>
 
 class Payment {
 public:
-    Payment(double value, time_t date);
+    Payment(double value, boost::gregorian::date date);
 
     double getValue() const;
 
-    time_t getDate() const;
+    boost::gregorian::date getDate() const;
 
 private:
     double value;
-    time_t date;
+    boost::gregorian::date date;
 
 };
 

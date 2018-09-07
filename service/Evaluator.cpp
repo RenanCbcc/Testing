@@ -28,7 +28,7 @@ void Evaluator::evaluate(Auction *auction) {
             Evaluator::bigger = Evaluator::biggest[0]->getValue();
         }
     } else{
-        throw std::runtime_error("Is not possible evaluate an auction without bids.");
+        throw std::runtime_error("Is not possible to evaluate an auction without bids.");
     }
 
     //TODO Free the pointer;

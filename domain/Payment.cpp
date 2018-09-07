@@ -4,12 +4,14 @@
 
 #include "Payment.h"
 
+Payment::Payment(double value, boost::gregorian::date date) : value(value), date(date) {}
+
 double Payment::getValue() const {
     return value;
 }
 
-time_t Payment::getDate() const {
+boost::gregorian::date Payment::getDate() const {
     return date;
 }
 
-Payment::Payment(double value, time_t date) : value(value), date(date) {}
+

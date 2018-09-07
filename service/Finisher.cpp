@@ -11,8 +11,7 @@ Finisher::Finisher(AuctionDAO &dao, EmailSender &emailSender) : dao(dao), mailma
 
 
 void Finisher::closes() {
-    std::vector<Auction *> allCurrentAuctions = dao.current();
-    for (Auction *auction : allCurrentAuctions) {
+    for (Auction *auction : dao.current()) {
         try {
             if (itStartedLastWeek(auction)) {
                 auction->close();

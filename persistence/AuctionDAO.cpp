@@ -9,11 +9,11 @@ std::vector<Auction *> AuctionDAO::current() {
 }
 
 void AuctionDAO::update(Auction *) {
-
+//TODO does nothing;
 }
 
 void AuctionDAO::save(Auction *) {
-
+//TODO does nothing;
 }
 
 std::vector<Auction *> AuctionDAO::closed() {
