@@ -29,12 +29,14 @@ public:
 
 class MockEmailSender : public EmailSender {
 public:
-    MOCK_METHOD1(send, void(Auction*));
+    MOCK_METHOD1(send, void(Auction
+            *));
 };
 
 class MockPaymentRepository : public PaymentRepository {
 public:
-    MOCK_METHOD1(save, void(Payment&));
+    MOCK_METHOD1(save, void(Payment
+            &));
 };
 
 struct Environment : testing::Test {
@@ -73,6 +75,7 @@ struct Environment : testing::Test {
     MockPaymentRepository mockPayment;
     MockAuctionDAO mockDAO;
     MockEmailSender mockESender;
+    Evaluator evaluator;
     TestBuilder *buildAuction;
     Auction *auctionOne;
     Auction *auctionTwo;
@@ -90,15 +93,14 @@ TEST_F(Environment, shouldRetunrBiggerAndSmallerOrder) {
             joseph, 300.0)->withBid(
             maria, 450.0)->build();
 
-    Evaluator auctioner;
-    auctioner.evaluate(auction);
+    evaluator.evaluate(auction);
 
     // comparando a saida com o esperado
     double maiorEsperado = 450;
     double menorEsperado = 250;
 
-    EXPECT_EQ(maiorEsperado, auctioner.getBigger());
-    EXPECT_EQ(menorEsperado, auctioner.getSmaller());
+    EXPECT_EQ(maiorEsperado, evaluator.getBigger());
+    EXPECT_EQ(menorEsperado, evaluator.getSmaller());
 
 }
 
@@ -112,11 +114,10 @@ TEST_F(Environment, shouldReturnTheMean) {
             ->withBid(maria, 450.0)
             ->build();
 
-    Evaluator auctioner;
-    auctioner.calculate(auction);
+    evaluator.calculate(auction);
     // comparing the returned result with the expected result.
     double expectedMean = 350.0;
-    EXPECT_NEAR(expectedMean, auctioner.getMean(), 0.01);
+    EXPECT_NEAR(expectedMean, evaluator.getMean(), 0.01);
 
 
 }
@@ -127,10 +128,9 @@ TEST_F(Environment, shouldRetunrAuctionWithOnlyOneBid) {
             ->withBid(maria, 250.0)
             ->build();
 
-    Evaluator auctioner;
-    auctioner.evaluate(auction);
+    evaluator.evaluate(auction);
 
-    EXPECT_EQ(250.0, auctioner.getBiggest()[0]->getValue());
+    EXPECT_EQ(250.0, evaluator.getBiggest()[0]->getValue());
 
 }
 
@@ -143,13 +143,13 @@ TEST_F(Environment, shouldRetunrAuctionThreeBiggestsBids) {
             ->withBid(maria, 450.0)
             ->withDoubleBid(john)
             ->build();
-    Evaluator auctioner;
-    auctioner.evaluate(auction);
 
-    EXPECT_EQ(3, auctioner.getBiggest().size());
-    EXPECT_EQ(400.0, auctioner.getBiggest()[2]->getValue());
-    EXPECT_EQ(450.0, auctioner.getBiggest()[1]->getValue());
-    EXPECT_EQ(800.0, auctioner.getBiggest()[0]->getValue());
+    evaluator.evaluate(auction);
+
+    EXPECT_EQ(3, evaluator.getBiggest().size());
+    EXPECT_EQ(400.0, evaluator.getBiggest()[2]->getValue());
+    EXPECT_EQ(450.0, evaluator.getBiggest()[1]->getValue());
+    EXPECT_EQ(800.0, evaluator.getBiggest()[0]->getValue());
 
 }
 
@@ -158,9 +158,9 @@ TEST_F(Environment, shouldRetunrNoBid) {
             ->to("Broken Playstation 4 pro")
             ->build();
 
-    Evaluator auctioner;
+    Evaluator evaluator;
 
-    EXPECT_EQ(true, auctioner.getBiggest().empty());
+    EXPECT_EQ(true, evaluator.getBiggest().empty());
 
 
 }
@@ -174,8 +174,7 @@ TEST_F(Environment, shouldSelectBidBetween1000And3000) {
             ->withBid(maria, 3000.0)
             ->build();
 
-    Evaluator auctioner;
-    auto bids = auctioner.filter(auction);
+    auto bids = evaluator.filter(auction);
     EXPECT_EQ(2, bids.size());
     EXPECT_EQ(1200.0, bids[0]->getValue());
 
@@ -192,8 +191,7 @@ TEST_F(Environment, shouldSelectBidAbove5000) {
             ->withBid(joseph, 5800.0)
             ->build();
 
-    Evaluator auctioner;
-    auto bids = auctioner.filter(auction);
+    auto bids = evaluator.filter(auction);
     EXPECT_EQ(3, bids.size());
     EXPECT_EQ(1200.0, bids[0]->getValue());
     EXPECT_EQ(2000.0, bids[1]->getValue());
@@ -285,13 +283,12 @@ TEST_F(Environment, shouldNotEvaluateAuctionsWithoutBids) {
             ->to("Hall 9000 computer")
             ->build();
 
-    Evaluator auctioner;
-    EXPECT_ANY_THROW(auctioner.evaluate(auction));
+    EXPECT_ANY_THROW(evaluator.evaluate(auction));
 }
 
 TEST_F(Environment, shouldCloseAuctionsOlderThanOneWeek) {
 
-    std::vector<Auction *> auctions = {auctionOne, auctionTwo};
+    std::vector<Auction *> auctions = {auctionOne, auctionTwo, auctionThree};
 
     EXPECT_CALL(mockDAO, current)
             .Times(1)
@@ -301,9 +298,10 @@ TEST_F(Environment, shouldCloseAuctionsOlderThanOneWeek) {
     Finisher finisher(mockDAO, mockESender);
     finisher.closes();
 
-    EXPECT_EQ(2, auctions.size());
+    EXPECT_EQ(3, auctions.size());
     ASSERT_TRUE(auctionOne->isClosed());
     ASSERT_TRUE(auctionTwo->isClosed());
+    ASSERT_FALSE(auctionThree->isClosed());
 }
 
 TEST_F(Environment, shouldNotCloseAuctionsStartedYesterday) {
@@ -478,8 +476,7 @@ TEST_F(Environment, shouldGeneratePaymentForClosedAuction) {
             .Times(1)
             .WillOnce(testing::SaveArg<0>(buffer));// It  will return the argument received by save method.
 
-    Evaluator evaluator;
-    evaluator.evaluate(auctionThree);
+
 
     Finisher finisher(mockDAO, mockESender);
     finisher.closes();
@@ -489,7 +486,34 @@ TEST_F(Environment, shouldGeneratePaymentForClosedAuction) {
 
     EXPECT_EQ(1, auctions.size());
     ASSERT_FALSE(auctionThree->isClosed());
-    ASSERT_DOUBLE_EQ(evaluator.getBigger(),buffer->getValue());
+    ASSERT_DOUBLE_EQ(evaluator.getBigger(), buffer->getValue());
+
+}
+
+
+TEST_F(Environment, shouldPushPaymentForTheNextBusinessDay) {
+
+    Payment *buffer;
+    std::vector<Auction *> auctions = {auctionThree};
+
+    EXPECT_CALL(mockDAO, closed())
+            .Times(1)
+            .WillOnce(testing::Return(auctions));
+
+    EXPECT_CALL(mockPayment, save(testing::_))
+            .Times(1)
+            .WillOnce(testing::SaveArg<0>(buffer));// It  will return the argument received by save method.
+
+
+    Finisher finisher(mockDAO, mockESender);
+    finisher.closes();
+
+    PaymentGenerator paymentGenerator(mockDAO, evaluator, mockPayment);
+    paymentGenerator.generate();
+
+    EXPECT_EQ(1, auctions.size());
+    ASSERT_FALSE(auctionThree->isClosed());
+    ASSERT_EQ(boost::gregorian::Monday, buffer->getDate().day_of_week());
 
 }
 
