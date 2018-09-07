@@ -12,7 +12,9 @@
 
 class PaymentGenerator {
 public:
-    PaymentGenerator(AuctionDAO &, Evaluator &,PaymentRepository&);
+    PaymentGenerator(AuctionDAO &, Evaluator &, PaymentRepository &);
+
+    boost::gregorian::date getBusinessDay();
 
     void generate();
 

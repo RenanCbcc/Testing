@@ -49,11 +49,11 @@ struct Environment : testing::Test {
         maria = new User("Maria", 03);
 
         auctionOne = buildAuction
-                ->to("Led Television 50")->atDate(boost::gregorian::date(2018, 8, 24))
+                ->to("Led Television 50")->atDate(boost::gregorian::day_clock::local_day() - boost::gregorian::weeks(1))
                 ->build();
 
         auctionTwo = buildAuction
-                ->to("Blue Ray Sony")->atDate(boost::gregorian::date(2018, 8, 24))
+                ->to("Blue Ray Sony")->atDate(boost::gregorian::day_clock::local_day() - boost::gregorian::weeks(1))
                 ->build();
 
         auctionThree = buildAuction
@@ -467,8 +467,8 @@ TEST_F(Environment, shouldNeverCallSendBecauseThrownException) {
 
 TEST_F(Environment, shouldGeneratePaymentForClosedAuction) {
 
-    Payment *buffer = nullptr;
-    std::vector<Auction *> auctions = {auctionOne, auctionTwo, auctionThree};
+    Payment *buffer;
+    std::vector<Auction *> auctions = {auctionThree};
 
     EXPECT_CALL(mockDAO, closed())
             .Times(1)
@@ -476,7 +476,7 @@ TEST_F(Environment, shouldGeneratePaymentForClosedAuction) {
 
     EXPECT_CALL(mockPayment, save(testing::_))
             .Times(1)
-            .WillOnce(testing::SaveArg<0>(buffer));// It  will return the argument received by save.
+            .WillOnce(testing::SaveArg<0>(buffer));// It  will return the argument received by save method.
 
     Evaluator evaluator;
     evaluator.evaluate(auctionThree);
@@ -487,11 +487,9 @@ TEST_F(Environment, shouldGeneratePaymentForClosedAuction) {
     PaymentGenerator paymentGenerator(mockDAO, evaluator, mockPayment);
     paymentGenerator.generate();
 
-    EXPECT_EQ(3, auctions.size());
-    ASSERT_TRUE(auctionOne->isClosed());
-    ASSERT_TRUE(auctionTwo->isClosed());
+    EXPECT_EQ(1, auctions.size());
     ASSERT_FALSE(auctionThree->isClosed());
-    //ASSERT_DOUBLE_EQ(evaluator.getBigger(),buffer->getValue());
+    ASSERT_DOUBLE_EQ(evaluator.getBigger(),buffer->getValue());
 
 }
 
